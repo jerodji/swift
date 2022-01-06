@@ -77,7 +77,7 @@ void *swift::swift_slowAlloc(size_t size, size_t alignMask) {
   void *p;
   // This check also forces "default" alignment to use AlignedAlloc.
   if (alignMask <= MALLOC_ALIGN_MASK) {
-    p = malloc(size);
+    p = malloc(size); //开辟内存空间
   } else {
     size_t alignment = (alignMask == ~(size_t(0)))
                            ? _swift_MinAllocationAlignment

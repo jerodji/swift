@@ -497,7 +497,7 @@ using MetadataBounds = TargetMetadataBounds<InProcess>;
 
 /// The common structure of all type metadata.
 template <typename Runtime>
-struct TargetMetadata {
+struct TargetMetadata { // 所有元类类型的最终基类
   using StoredPointer = typename Runtime::StoredPointer;
 
   /// The basic header type.
@@ -517,7 +517,7 @@ protected:
 private:
   /// The kind. Only valid for non-class metadata; getKind() must be used to get
   /// the kind value.
-  StoredPointer Kind;
+  StoredPointer Kind; //Kind成员变量, isa类型 ?
 public:
   /// Get the metadata kind.
   MetadataKind getKind() const {
@@ -649,9 +649,9 @@ public:
   /// or return null if it does not.
   ConstTargetMetadataPointer<Runtime, TargetTypeContextDescriptor>
   getTypeContextDescriptor() const {
-    switch (getKind()) {
+    switch (getKind()) { // 根据 kind 区分不同的类
     case MetadataKind::Class: {
-      const auto cls = static_cast<const TargetClassMetadata<Runtime> *>(this);
+      const auto cls = static_cast<const TargetClassMetadata<Runtime> *>(this); //把this强转成TargetClassMetadata类型
       if (!cls->isTypeMetadata())
         return nullptr;
       if (cls->isArtificialSubclass())
@@ -764,14 +764,14 @@ using HeapMetadataHeader =
 /// this metadata may not have the heap-metadata header, and it may
 /// not be the Swift type metadata for the object's dynamic type.
 template <typename Runtime>
-struct TargetHeapMetadata : TargetMetadata<Runtime> {
+struct TargetHeapMetadata : TargetMetadata<Runtime> {  //继承自TargetMetadata
   using HeaderType = TargetHeapMetadataHeader<Runtime>;
-
+// 下面是初始化
   TargetHeapMetadata() = default;
-  constexpr TargetHeapMetadata(MetadataKind kind)
+  constexpr TargetHeapMetadata(MetadataKind kind) //纯swift, 传入kind
     : TargetMetadata<Runtime>(kind) {}
-#if SWIFT_OBJC_INTEROP
-  constexpr TargetHeapMetadata(TargetAnyClassMetadata<Runtime> *isa)
+#if SWIFT_OBJC_INTEROP // 和objc交互
+  constexpr TargetHeapMetadata(TargetAnyClassMetadata<Runtime> *isa) //传入isa
     : TargetMetadata<Runtime>(isa) {}
 #endif
 };

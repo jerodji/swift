@@ -85,17 +85,17 @@ static inline bool isValidPointerForNativeRetain(const void *p) {
 } while(0)
 
 
-static HeapObject *_swift_allocObject_(HeapMetadata const *metadata,
-                                       size_t requiredSize,
-                                       size_t requiredAlignmentMask) {
+static HeapObject *_swift_allocObject_(HeapMetadata const *metadata,//元数据类型
+                                       size_t requiredSize,//需要的大小
+                                       size_t requiredAlignmentMask) {//需要对齐的掩码,8字节对齐,libObjc中是7
   assert(isAlignmentMask(requiredAlignmentMask));
-  auto object = reinterpret_cast<HeapObject *>(
-      swift_slowAlloc(requiredSize, requiredAlignmentMask));
+  auto object = reinterpret_cast<HeapObject *>( // reinterpret_cast: c++中的指针类型转换
+      swift_slowAlloc(requiredSize, requiredAlignmentMask)); // 返回HeapObject类型的指针
 
   // NOTE: this relies on the C++17 guaranteed semantics of no null-pointer
   // check on the placement new allocator which we have observed on Windows,
   // Linux, and macOS.
-  new (object) HeapObject(metadata);
+  new (object) HeapObject(metadata);//调用HeapObject初始化方法
 
   // If leak tracking is enabled, start tracking this object.
   SWIFT_LEAKS_START_TRACKING_OBJECT(object);
@@ -104,7 +104,7 @@ static HeapObject *_swift_allocObject_(HeapMetadata const *metadata,
 
   return object;
 }
-
+// 初始化 __allocating_init -> swift_allocObject -> _swift_allocObject_ -> swift_slowAlloc -> Malloc
 HeapObject *swift::swift_allocObject(HeapMetadata const *metadata,
                                      size_t requiredSize,
                                      size_t requiredAlignmentMask) {

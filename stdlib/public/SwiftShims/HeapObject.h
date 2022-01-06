@@ -29,7 +29,7 @@ namespace swift {
 struct InProcess;
 
 template <typename Target> struct TargetHeapMetadata;
-using HeapMetadata = TargetHeapMetadata<InProcess>;
+using HeapMetadata = TargetHeapMetadata<InProcess>; //使用指定的命名空间, 类似于别名定义
 #else
 typedef struct HeapMetadata HeapMetadata;
 typedef struct HeapObject HeapObject;
@@ -44,9 +44,9 @@ typedef struct HeapObject HeapObject;
 /// This must match RefCountedStructTy in IRGen.
 struct HeapObject {
   /// This is always a valid pointer to a metadata object.
-  HeapMetadata const *metadata;
+  HeapMetadata const *metadata; // 8字节
 
-  SWIFT_HEAPOBJECT_NON_OBJC_MEMBERS;
+  SWIFT_HEAPOBJECT_NON_OBJC_MEMBERS; //64位的位域信息, 8字节; metadata 和 refCounts 一起构成默认16字节实例对象的内存大小
 
 #ifndef __swift__
   HeapObject() = default;

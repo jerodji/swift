@@ -78,7 +78,7 @@ enum class MetadataKind : uint32_t {
   /// runtime must tolerate metadata with unknown kinds.
   /// This specific value is not mapped to a valid metadata kind at this time,
   /// however.
-  LastEnumerated = 0x7FF,
+  LastEnumerated = 0x7FF, //kind种类, 固定的地址值,还有其它的种类
 };
 
 const unsigned LastEnumeratedMetadataKind =
