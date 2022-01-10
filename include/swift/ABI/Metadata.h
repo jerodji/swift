@@ -786,10 +786,10 @@ using HeapMetadata = TargetHeapMetadata<InProcess>;
 template <typename Runtime>
 struct TargetMethodDescriptor {
   /// Flags describing the method.
-  MethodDescriptorFlags Flags;
+  MethodDescriptorFlags Flags; // 4字节, 标识方法的种类, 初始化/getter/setter等等
 
   /// The method implementation.
-  TargetRelativeDirectPointer<Runtime, void> Impl;
+  TargetRelativeDirectPointer<Runtime, void> Impl; // 这里不是一个真正的地址, 而是相对地址Offset
 
   // TODO: add method types or anything else needed for reflection.
 };

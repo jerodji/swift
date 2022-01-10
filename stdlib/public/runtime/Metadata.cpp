@@ -2305,14 +2305,14 @@ static void copySuperclassMetadataToSubclass(ClassMetadata *theClass,
 /// immediate vtable entries for the class and install overrides of any
 /// superclass vtable entries.
 static void initClassVTable(ClassMetadata *self) {
-  const auto *description = self->getDescription();
+  const auto *description = self->getDescription();//获取self(Metadata)的描述
   auto *classWords = reinterpret_cast<void **>(self);
 
   if (description->hasVTable()) {
     auto *vtable = description->getVTableDescriptor();
-    auto vtableOffset = vtable->getVTableOffset(description);
+    auto vtableOffset = vtable->getVTableOffset(description); //获得vtable的offset
     for (unsigned i = 0, e = vtable->VTableSize; i < e; ++i)
-      classWords[vtableOffset + i] = description->getMethod(i);
+      classWords[vtableOffset + i] = description->getMethod(i); //把VTableDescriptor放在对应位置
   }
 
   if (description->hasOverrideTable()) {
