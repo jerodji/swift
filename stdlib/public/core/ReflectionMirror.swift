@@ -9,7 +9,7 @@
 // See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 //
 //===----------------------------------------------------------------------===//
-
+// 把 C/C++ 函数映射为 swift 函数
 @_silgen_name("swift_reflectionMirror_normalizedType")
 internal func _getNormalizedType<T>(_: T, type: Any.Type) -> Any.Type
 
@@ -107,8 +107,8 @@ extension Mirror {
   internal init(internalReflecting subject: Any,
               subjectType: Any.Type? = nil,
               customAncestor: Mirror? = nil)
-  {
-    let subjectType = subjectType ?? _getNormalizedType(subject, type: type(of: subject))
+  {// Mirror的初始化方法, subjectType是传入的类型信息
+    let subjectType = subjectType ?? _getNormalizedType(subject, type: type(of: subject))//如果subjectType没有传入,获取subject类型信息
     
     let childCount = _getChildCount(subject, type: subjectType)
     let children = (0 ..< childCount).lazy.map({

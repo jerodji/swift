@@ -112,11 +112,11 @@ public struct Mirror {
   /// though, the observability of mutations is unspecified.
   ///
   /// - Parameter subject: The instance for which to create a mirror.
-  public init(reflecting subject: Any) {
-    if case let customized as CustomReflectable = subject {
-      self = customized.customMirror
+  public init(reflecting subject: Any) { // mirror初始化方法
+    if case let customized as CustomReflectable = subject { // 匹配 customized 是否遵循 CustomReflectable 协议
+      self = customized.customMirror // 调用自定义的customMirror方法
     } else {
-      self = Mirror(internalReflecting: subject)
+      self = Mirror(internalReflecting: subject) // 自定义初始化方法
     }
   }
 

@@ -1405,17 +1405,17 @@ using EnumMetadata = TargetEnumMetadata<InProcess>;
 
 /// The structure of function type metadata.
 template <typename Runtime>
-struct TargetFunctionTypeMetadata : public TargetMetadata<Runtime> {
+struct TargetFunctionTypeMetadata : public TargetMetadata<Runtime> { //函数类型元数据
   using StoredSize = typename Runtime::StoredSize;
   using Parameter = ConstTargetMetadataPointer<Runtime, swift::TargetMetadata>;
 
-  TargetFunctionTypeFlags<StoredSize> Flags;
+  TargetFunctionTypeFlags<StoredSize> Flags;//参数类型
 
   /// The type metadata for the result type.
-  ConstTargetMetadataPointer<Runtime, swift::TargetMetadata> ResultType;
+  ConstTargetMetadataPointer<Runtime, swift::TargetMetadata> ResultType;//返回值类型
 
   Parameter *getParameters() { return reinterpret_cast<Parameter *>(this + 1); }
-
+// 参数, 连续的内存数组空间
   const Parameter *getParameters() const {
     return reinterpret_cast<const Parameter *>(this + 1);
   }

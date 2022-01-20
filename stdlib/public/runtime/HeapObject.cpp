@@ -95,7 +95,7 @@ static HeapObject *_swift_allocObject_(HeapMetadata const *metadata,//元数据�
   // NOTE: this relies on the C++17 guaranteed semantics of no null-pointer
   // check on the placement new allocator which we have observed on Windows,
   // Linux, and macOS.
-  new (object) HeapObject(metadata);//调用HeapObject初始化方法
+  new (object) HeapObject(metadata);//调用HeapObject初始化方法, 初始化实例对象
 
   // If leak tracking is enabled, start tracking this object.
   SWIFT_LEAKS_START_TRACKING_OBJECT(object);

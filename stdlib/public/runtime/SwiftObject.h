@@ -40,8 +40,8 @@ __attribute__((__objc_root_class__))
 #endif
 SWIFT_RUNTIME_EXPORT @interface SwiftObject<NSObject> {
  @private
-  Class isa;
-  SWIFT_HEAPOBJECT_NON_OBJC_MEMBERS;
+  Class isa; // 类类型/元类型, 存放metadata的指针
+  SWIFT_HEAPOBJECT_NON_OBJC_MEMBERS; //纯swift类 引用计数
 }
 
 - (BOOL)isEqual:(id)object;

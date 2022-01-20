@@ -933,7 +933,7 @@ namespace {
       B.addRelativeAddressOrNull(global);
     }
   };
-
+// 创建 Descriptor 
   template<class Impl, class DeclType>
   class TypeContextDescriptorBuilderBase
     : public ContextDescriptorBuilderBase<Impl> {
@@ -962,7 +962,7 @@ namespace {
         HasMetadata(requireMetadata),
         MetadataInitialization(computeMetadataInitialization()) {
     }
-    
+    // 内存布局, 赋值
     void layout() {
       asImpl().computeIdentity();
 
@@ -1357,7 +1357,7 @@ namespace {
         getType()->getDeclaredType()->getCanonicalType()));
     }
   };
-  
+// 类的Descriptor构建者, 创建 metadata 和 Descriptor 的地方
   class ClassContextDescriptorBuilder
     : public TypeContextDescriptorBuilderBase<ClassContextDescriptorBuilder,
                                               ClassDecl>,
@@ -1406,10 +1406,10 @@ namespace {
     void addMethodOverride(SILDeclRef baseRef, SILDeclRef declRef) {
       OverrideTableEntries.emplace_back(baseRef, declRef);
     }
-
+    // 内存布局的赋值操作
     void layout() {
-      super::layout();
-      addVTable();
+      super::layout(); // 父类中有一些赋值
+      addVTable();  // 添加 vtable
       addOverrideTable();
       addObjCResilientClassStubInfo();
     }
@@ -1482,24 +1482,24 @@ namespace {
                 ? MetadataLayout->getRelativeFieldOffsetVectorOffset()
                 : MetadataLayout->getStaticFieldOffsetVectorOffset());
     }
-    
+    // 添加 vtable
     void addVTable() {
-      if (VTableEntries.empty())
+      if (VTableEntries.empty()) // VTableEntries 是一个数组
         return;
 
       // Only emit a method lookup function if the class is resilient
       // and has a non-empty vtable.
       if (IGM.hasResilientMetadata(getType(), ResilienceExpansion::Minimal))
         IGM.emitMethodLookupFunction(getType());
-
+      // 计算偏移量
       auto offset = MetadataLayout->hasResilientSuperclass()
                       ? MetadataLayout->getRelativeVTableOffset()
                       : MetadataLayout->getStaticVTableOffset();
-      B.addInt32(offset / IGM.getPointerSize());
-      B.addInt32(VTableEntries.size());
+      B.addInt32(offset / IGM.getPointerSize()); // B是Descriptor结构体, 把偏移量添加到B
+      B.addInt32(VTableEntries.size()); // 添加vtable的size大小
       
       for (auto fn : VTableEntries)
-        emitMethodDescriptor(fn);
+        emitMethodDescriptor(fn); // 遍历数组VTableEntries,添加函数指针
     }
 
     void emitMethodDescriptor(SILDeclRef fn) {
