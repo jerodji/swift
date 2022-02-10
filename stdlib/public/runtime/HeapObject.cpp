@@ -307,11 +307,11 @@ HeapObject *swift::swift_allocEmptyBox() {
 // Forward-declare this, but define it after swift_release.
 extern "C" LLVM_LIBRARY_VISIBILITY LLVM_ATTRIBUTE_NOINLINE LLVM_ATTRIBUTE_USED 
 void _swift_release_dealloc(HeapObject *object);
-
+// 增加强引用计数
 static HeapObject *_swift_retain_(HeapObject *object) {
   SWIFT_RT_TRACK_INVOCATION(object, swift_retain);
   if (isValidPointerForNativeRetain(object))
-    object->refCounts.increment(1);
+    object->refCounts.increment(1); // 调用对象的 refCounts 加 1
   return object;
 }
 

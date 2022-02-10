@@ -204,7 +204,7 @@ struct RefCountBitsInt;
 // 64-bit out of line
 template <RefCountInlinedness refcountIsInline>
 struct RefCountBitsInt<refcountIsInline, 8> {
-  typedef uint64_t Type;
+  typedef uint64_t Type; // 64 位的位域信息,存储引用计数
   typedef int64_t SignedType;
 };
 
@@ -327,14 +327,14 @@ class RefCountBitsT {
   
   static const RefCountInlinedness Inlinedness = refcountIsInline;
 
-  typedef typename RefCountBitsInt<refcountIsInline, sizeof(void*)>::Type
+  typedef typename RefCountBitsInt<refcountIsInline, sizeof(void*)>::Type // RefCountBitsInt 的 Type 属性
     BitsType;
   typedef typename RefCountBitsInt<refcountIsInline, sizeof(void*)>::SignedType
     SignedBitsType;
   typedef RefCountBitOffsets<sizeof(BitsType)>
     Offsets;
 
-  BitsType bits;
+  BitsType bits; //BitsType在上面定义的
 
   // "Bitfield" accessors.
 
@@ -384,9 +384,9 @@ class RefCountBitsT {
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
   constexpr
-  RefCountBitsT(uint32_t strongExtraCount, uint32_t unownedCount)
-    : bits((BitsType(strongExtraCount) << Offsets::StrongExtraRefCountShift) |
-           (BitsType(unownedCount)     << Offsets::UnownedRefCountShift))
+  RefCountBitsT(uint32_t strongExtraCount, uint32_t unownedCount) //初始化方法, 传入 0, 1, 
+    : bits((BitsType(strongExtraCount) << Offsets::StrongExtraRefCountShift) | //强引用计数,左移33位
+           (BitsType(unownedCount)     << Offsets::UnownedRefCountShift)) // 无主引用计数,左移1位
   { }
   
   LLVM_ATTRIBUTE_ALWAYS_INLINE
@@ -512,7 +512,7 @@ class RefCountBitsT {
   LLVM_NODISCARD LLVM_ATTRIBUTE_ALWAYS_INLINE
   bool incrementStrongExtraRefCount(uint32_t inc) {
     // This deliberately overflows into the UseSlowRC field.
-    bits += BitsType(inc) << Offsets::StrongExtraRefCountShift;
+    bits += BitsType(inc) << Offsets::StrongExtraRefCountShift; // inc是 1,左移 33 位后与原来的相加.
     return (SignedBitsType(bits) >= 0);
   }
 
@@ -587,7 +587,7 @@ class RefCountBitsT {
 # undef maskForField
 # undef shiftAfterField
 
-typedef RefCountBitsT<RefCountIsInline> InlineRefCountBits;
+typedef RefCountBitsT<RefCountIsInline> InlineRefCountBits; //InlineRefCountBits实际上是RefCountBitsT
 
 class alignas(sizeof(void*) * 2) SideTableRefCountBits : public RefCountBitsT<RefCountNotInline>
 {
@@ -659,7 +659,7 @@ class alignas(sizeof(void*) * 2) SideTableRefCountBits : public RefCountBitsT<Re
 // store-release, but most other stores into refCounts are store-relaxed.
 
 template <typename RefCountBits>
-class RefCounts {
+class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBits
   std::atomic<RefCountBits> refCounts;
 
   // Out-of-line slow paths.
@@ -688,9 +688,9 @@ class RefCounts {
   // to produce an initialized instance.
   RefCounts() = default;
   
-  // Refcount of a new object is 1.
+  // Refcount of a new object is 1.  `RefCounts` 的初始化方法, 传入 0 和 1
   constexpr RefCounts(Initialized_t)
-    : refCounts(RefCountBits(0, 1)) {}
+    : refCounts(RefCountBits(0, 1)) {} // 这里的 泛型RefCountBits 是 InlineRefCountBits, 也就是 `RefCountBitsT`
 
   // Refcount of an immortal object has top and bottom bits set
   constexpr RefCounts(Immortal_t)
@@ -732,13 +732,13 @@ class RefCounts {
     refCounts.store(newBits, std::memory_order_relaxed);
   }
 
-  // Increment the reference count.
+  // Increment the reference count.  // 增加引用计数
   void increment(uint32_t inc = 1) {
     auto oldbits = refCounts.load(SWIFT_MEMORY_ORDER_CONSUME);
     RefCountBits newbits;
     do {
       newbits = oldbits;
-      bool fast = newbits.incrementStrongExtraRefCount(inc);
+      bool fast = newbits.incrementStrongExtraRefCount(inc); //传入 1 进行累加
       if (SWIFT_UNLIKELY(!fast)) {
         if (oldbits.isImmortal())
           return;
@@ -1185,7 +1185,7 @@ class RefCounts {
   HeapObjectSideTableEntry* allocateSideTable(bool failIfDeiniting);
 };
 
-typedef RefCounts<InlineRefCountBits> InlineRefCounts;
+typedef RefCounts<InlineRefCountBits> InlineRefCounts;//RefCounts管理引用计数,传入泛型InlineRefCountBits
 typedef RefCounts<SideTableRefCountBits> SideTableRefCounts;
 
 static_assert(std::is_trivially_destructible<InlineRefCounts>::value,

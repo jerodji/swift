@@ -38,15 +38,15 @@ typedef struct HeapObject HeapObject;
 // The members of the HeapObject header that are not shared by a
 // standard Objective-C instance
 #define SWIFT_HEAPOBJECT_NON_OBJC_MEMBERS       \
-  InlineRefCounts refCounts
+  InlineRefCounts refCounts // 引用计数
 
 /// The Swift heap-object header.
 /// This must match RefCountedStructTy in IRGen.
 struct HeapObject {
   /// This is always a valid pointer to a metadata object.
-  HeapMetadata const *metadata; // 8字节
+  HeapMetadata const *metadata; // 元类型 8字节
 
-  SWIFT_HEAPOBJECT_NON_OBJC_MEMBERS; //64位的位域信息, 8字节; metadata 和 refCounts 一起构成默认16字节实例对象的内存大小
+  SWIFT_HEAPOBJECT_NON_OBJC_MEMBERS; //refCounts 引用计数, 8字节,64位的位域信息; metadata 和 refCounts 一起构成默认16字节实例对象的内存大小
 
 #ifndef __swift__
   HeapObject() = default;
