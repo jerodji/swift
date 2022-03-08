@@ -322,8 +322,8 @@ struct RefCountBitOffsets<4> {
 template <RefCountInlinedness refcountIsInline>
 class RefCountBitsT {
 
-  friend class RefCountBitsT<RefCountIsInline>;
-  friend class RefCountBitsT<RefCountNotInline>;
+  friend class RefCountBitsT<RefCountIsInline>; // RefCountIsInline: refcount stored in an object
+  friend class RefCountBitsT<RefCountNotInline>; // RefCountNotInline: refcount stored in an object's side table entry
   
   static const RefCountInlinedness Inlinedness = refcountIsInline;
 
@@ -334,7 +334,7 @@ class RefCountBitsT {
   typedef RefCountBitOffsets<sizeof(BitsType)>
     Offsets;
 
-  BitsType bits; //BitsType在上面定义的
+  BitsType bits; //BitsType在上面定义的, RefCountBitsInt::Type属性, 存储引用计数
 
   // "Bitfield" accessors.
 
@@ -385,8 +385,8 @@ class RefCountBitsT {
   LLVM_ATTRIBUTE_ALWAYS_INLINE
   constexpr
   RefCountBitsT(uint32_t strongExtraCount, uint32_t unownedCount) //初始化方法, 传入 0, 1, 
-    : bits((BitsType(strongExtraCount) << Offsets::StrongExtraRefCountShift) | //强引用计数,左移33位
-           (BitsType(unownedCount)     << Offsets::UnownedRefCountShift)) // 无主引用计数,左移1位
+    : bits((BitsType(strongExtraCount) << Offsets::StrongExtraRefCountShift) | // 强引用计数,左移33位, 存在[33,62]位
+           (BitsType(unownedCount)     << Offsets::UnownedRefCountShift)) // 无主引用计数,左移1位, 存在[1,32]位
   { }
   
   LLVM_ATTRIBUTE_ALWAYS_INLINE

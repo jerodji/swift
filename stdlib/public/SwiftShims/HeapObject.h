@@ -52,9 +52,9 @@ struct HeapObject {
   HeapObject() = default;
 
   // Initialize a HeapObject header as appropriate for a newly-allocated object.
-  constexpr HeapObject(HeapMetadata const *newMetadata) 
+  constexpr HeapObject(HeapMetadata const *newMetadata) //初始化
     : metadata(newMetadata)
-    , refCounts(InlineRefCounts::Initialized)
+    , refCounts(InlineRefCounts::Initialized) //初始化引用计数赋值, 泛型InlineRefCounts
   { }
   
   // Initialize a HeapObject header for an immortal object
