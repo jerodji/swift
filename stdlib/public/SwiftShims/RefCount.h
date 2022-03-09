@@ -765,11 +765,11 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
     auto oldbits = refCounts.load(SWIFT_MEMORY_ORDER_CONSUME);
     RefCountBits newbits;
     do {
-      if (!oldbits.hasSideTable() && oldbits.getIsDeiniting())
+      if (!oldbits.hasSideTable() && oldbits.getIsDeiniting())//没有 sideTable 且正在释放
         return false;
 
       newbits = oldbits;
-      bool fast = newbits.incrementStrongExtraRefCount(1);
+      bool fast = newbits.incrementStrongExtraRefCount(1);//计数+1
       if (SWIFT_UNLIKELY(!fast)) {
         if (oldbits.isImmortal())
           return true;
@@ -1136,7 +1136,7 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
   // Use this when creating a new weak reference to an object.
   HeapObjectSideTableEntry* formWeakReference();
 
-  // Increment the weak reference count.
+  // Increment the weak reference count. // 增加弱引用计数
   void incrementWeak() {
     auto oldbits = refCounts.load(SWIFT_MEMORY_ORDER_CONSUME);
     RefCountBits newbits;

@@ -152,7 +152,7 @@ class WeakReferenceBits {
   }
 };
 
-
+//弱引用
 class WeakReference {
   union {
     std::atomic<WeakReferenceBits> nativeValue;

@@ -127,9 +127,9 @@ HeapObjectSideTableEntry* RefCounts<InlineRefCountBits>::allocateSideTable(bool 
 template <>
 HeapObjectSideTableEntry* RefCounts<InlineRefCountBits>::formWeakReference()
 {
-  auto side = allocateSideTable(true);
+  auto side = allocateSideTable(true);//创建 sideTable
   if (side)
-    return side->incrementWeak();
+    return side->incrementWeak(); //增加 weak 引用计数
   else
     return nullptr;
 }

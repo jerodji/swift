@@ -395,7 +395,7 @@ size_t swift::swift_retainCount(HeapObject *object) {
 size_t swift::swift_unownedRetainCount(HeapObject *object) {
   return object->refCounts.getUnownedCount();
 }
-
+//获取弱引用计数
 size_t swift::swift_weakRetainCount(HeapObject *object) {
   return object->refCounts.getWeakCount();
 }
@@ -800,7 +800,7 @@ void swift::swift_deallocUninitializedObject(HeapObject *object,
                                              size_t allocatedAlignMask) {
   swift_deallocObjectImpl(object, allocatedSize, allocatedAlignMask, false);
 }
-
+// 弱引用初始化
 WeakReference *swift::swift_weakInit(WeakReference *ref, HeapObject *value) {
   ref->nativeInit(value);
   return ref;
