@@ -405,7 +405,7 @@ HeapObject *swift::swift_unownedRetain(HeapObject *object) {
   if (!isValidPointerForNativeRetain(object))
     return object;
 
-  object->refCounts.incrementUnowned(1);
+  object->refCounts.incrementUnowned(1); //无主引用, 这里面会创建 SideTable
   return object;
 }
 

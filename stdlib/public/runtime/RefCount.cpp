@@ -13,7 +13,7 @@
 #include "swift/Runtime/HeapObject.h"
 
 namespace swift {
-
+// 进行散列表引用计数累加
 template <typename RefCountBits>
 void RefCounts<RefCountBits>::incrementSlow(RefCountBits oldbits,
                                             uint32_t n) {
@@ -27,7 +27,7 @@ void RefCounts<RefCountBits>::incrementSlow(RefCountBits oldbits,
   }
   else {
     // Retain count overflow.
-    swift::swift_abortRetainOverflow();
+    swift::swift_abortRetainOverflow(); //retained too many times
   }
 }
 template void RefCounts<InlineRefCountBits>::incrementSlow(InlineRefCountBits oldbits, uint32_t n);
@@ -80,7 +80,7 @@ template bool RefCounts<SideTableRefCountBits>::tryIncrementNonAtomicSlow(SideTa
 // Returns null if the object is deiniting.
 // SideTableRefCountBits specialization intentionally does not exist.
 template <>
-HeapObjectSideTableEntry* RefCounts<InlineRefCountBits>::allocateSideTable(bool failIfDeiniting)
+HeapObjectSideTableEntry* RefCounts<InlineRefCountBits>::allocateSideTable(bool failIfDeiniting) //创建散列表
 {
   auto oldbits = refCounts.load(SWIFT_MEMORY_ORDER_CONSUME);
   

@@ -78,10 +78,10 @@ typedef InlineRefCountsPlaceholder InlineRefCounts;
   HeapObject {
     isa
     InlineRefCounts {
-      atomic<InlineRefCountBits> {
-        strong RC + unowned RC + flags
+      atomic<InlineRefCountBits> { //引用计数的 2 种方式
+        strong RC + unowned RC + flags // refcount,存在对象上
         OR
-        HeapObjectSideTableEntry*
+        HeapObjectSideTableEntry* // 散列表地址
       }
     }
   }
@@ -205,7 +205,7 @@ struct RefCountBitsInt;
 template <RefCountInlinedness refcountIsInline>
 struct RefCountBitsInt<refcountIsInline, 8> {
   typedef uint64_t Type; // 64 位的位域信息,存储引用计数
-  typedef int64_t SignedType;
+  typedef int64_t SignedType; //
 };
 
 // 32-bit out of line
@@ -446,7 +446,7 @@ class RefCountBitsT {
   HeapObjectSideTableEntry *getSideTable() const { // 获取散列表
     assert(hasSideTable());
 
-    // Stored value is a shifted pointer. // 存储的值是一个移位的指针
+    // Stored value is a shifted pointer. // 存储的值是一个移位的指针, 散列表地址
     return reinterpret_cast<HeapObjectSideTableEntry *>
       (uintptr_t(getField(SideTable)) << Offsets::SideTableUnusedLowBits); // 左移2位
   }
@@ -481,7 +481,7 @@ class RefCountBitsT {
     assert(hasSideTable());
     // Stored value is a shifted pointer.
     uintptr_t value = reinterpret_cast<uintptr_t>(side);
-    uintptr_t storedValue = value >> Offsets::SideTableUnusedLowBits;
+    uintptr_t storedValue = value >> Offsets::SideTableUnusedLowBits; // >> 3
     assert(storedValue << Offsets::SideTableUnusedLowBits == value);
     setField(SideTable, storedValue);
     setField(SideTableMark, 1);
@@ -588,7 +588,7 @@ class RefCountBitsT {
 # undef shiftAfterField
 
 typedef RefCountBitsT<RefCountIsInline> InlineRefCountBits; //InlineRefCountBits实际上是RefCountBitsT
-
+// SideTableRefCountBits 继承 RefCountBitsT
 class alignas(sizeof(void*) * 2) SideTableRefCountBits : public RefCountBitsT<RefCountNotInline>
 {
   uint32_t weakBits;
@@ -1036,7 +1036,7 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
       assert(newbits.getUnownedRefCount() != 0);
       uint32_t oldValue = newbits.incrementUnownedRefCount(inc);
 
-      // Check overflow and use the side table on overflow.
+      // Check overflow and use the side table on overflow. //检查溢出，并在溢出时使用side table
       if (newbits.getUnownedRefCount() != oldValue + inc)
         return incrementUnownedSlow(inc);
 
@@ -1270,7 +1270,7 @@ class HeapObjectSideTableEntry {
     return refCounts.isUniquelyReferenced();
   }
 
-  // UNOWNED
+  // UNOWNED // 无主引用
 
   void incrementUnowned(uint32_t inc) {
     return refCounts.incrementUnowned(inc);
