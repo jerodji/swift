@@ -443,12 +443,12 @@ class RefCountBitsT {
   }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
-  HeapObjectSideTableEntry *getSideTable() const {
+  HeapObjectSideTableEntry *getSideTable() const { // 获取散列表
     assert(hasSideTable());
 
-    // Stored value is a shifted pointer.
+    // Stored value is a shifted pointer. // 存储的值是一个移位的指针
     return reinterpret_cast<HeapObjectSideTableEntry *>
-      (uintptr_t(getField(SideTable)) << Offsets::SideTableUnusedLowBits);
+      (uintptr_t(getField(SideTable)) << Offsets::SideTableUnusedLowBits); // 左移2位
   }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
@@ -506,13 +506,13 @@ class RefCountBitsT {
   }
   
 
-  // Returns true if the increment is a fast-path result.
-  // Returns false if the increment should fall back to some slow path
-  // (for example, because UseSlowRC is set or because the refcount overflowed).
+  // Returns true if the increment is a fast-path result. //如果增量是快速路径的结果，则返回true。
+  // Returns false if the increment should fall back to some slow path //如果增量应该回落到某个慢路径，则返回false
+  // (for example, because UseSlowRC is set or because the refcount overflowed). //(例如，因为设置了UseSlowRC或者因为refcount溢出)
   LLVM_NODISCARD LLVM_ATTRIBUTE_ALWAYS_INLINE
   bool incrementStrongExtraRefCount(uint32_t inc) {
-    // This deliberately overflows into the UseSlowRC field.
-    bits += BitsType(inc) << Offsets::StrongExtraRefCountShift; // inc是 1,左移 33 位后与原来的相加.
+    // This deliberately overflows into the UseSlowRC field. // 如果溢出,这故意溢出到UseSlowRC字段 [第63位]
+    bits += BitsType(inc) << Offsets::StrongExtraRefCountShift; // inc 左移 33 位后与原来的相加. //疑问:这里在已经溢出的情况下再相加inc,是否会造成 bug?
     return (SignedBitsType(bits) >= 0);
   }
 
@@ -738,11 +738,11 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
     RefCountBits newbits;
     do {
       newbits = oldbits;
-      bool fast = newbits.incrementStrongExtraRefCount(inc); //传入 1 进行累加
+      bool fast = newbits.incrementStrongExtraRefCount(inc); //传入1进行累加,如果溢出
       if (SWIFT_UNLIKELY(!fast)) {
-        if (oldbits.isImmortal())
+        if (oldbits.isImmortal()) // isImmortal(第 0 位) 标志位是 1
           return;
-        return incrementSlow(oldbits, inc);
+        return incrementSlow(oldbits, inc); //
       }
     } while (!refCounts.compare_exchange_weak(oldbits, newbits,
                                               std::memory_order_relaxed));
@@ -1186,7 +1186,7 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
 };
 
 typedef RefCounts<InlineRefCountBits> InlineRefCounts;//RefCounts管理引用计数,传入泛型InlineRefCountBits
-typedef RefCounts<SideTableRefCountBits> SideTableRefCounts;
+typedef RefCounts<SideTableRefCountBits> SideTableRefCounts;//散列表管理引用计数,引用计数溢出和弱引用
 
 static_assert(std::is_trivially_destructible<InlineRefCounts>::value,
               "InlineRefCounts must be trivially destructible");
