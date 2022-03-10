@@ -56,7 +56,7 @@ bool RefCounts<RefCountBits>::tryIncrementSlow(RefCountBits oldbits) {
     return true;
   }
   else if (oldbits.hasSideTable())
-    return oldbits.getSideTable()->tryIncrement();
+    return oldbits.getSideTable()->tryIncrement(); //散列表增加计数
   else
     swift::swift_abortRetainOverflow();
 }
@@ -125,7 +125,7 @@ HeapObjectSideTableEntry* RefCounts<InlineRefCountBits>::allocateSideTable(bool 
 
 // SideTableRefCountBits specialization intentionally does not exist.
 template <>
-HeapObjectSideTableEntry* RefCounts<InlineRefCountBits>::formWeakReference()
+HeapObjectSideTableEntry* RefCounts<InlineRefCountBits>::formWeakReference() //获取散列表
 {
   auto side = allocateSideTable(true);//创建 sideTable
   if (side)

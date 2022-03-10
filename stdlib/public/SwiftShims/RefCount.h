@@ -615,7 +615,7 @@ class alignas(sizeof(void*) * 2) SideTableRefCountBits : public RefCountBitsT<Re
 
   
   LLVM_ATTRIBUTE_ALWAYS_INLINE
-  void incrementWeakRefCount() {
+  void incrementWeakRefCount() { //增加弱引用计数
     weakBits++;
   }
 

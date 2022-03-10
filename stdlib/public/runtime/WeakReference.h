@@ -123,7 +123,7 @@ class WeakReferenceBits {
   WeakReferenceBits() { }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
-  WeakReferenceBits(HeapObjectSideTableEntry *newValue) {
+  WeakReferenceBits(HeapObjectSideTableEntry *newValue) { //初始化
     setNativeOrNull(newValue);
   }
 
@@ -146,7 +146,7 @@ class WeakReferenceBits {
   void setNativeOrNull(HeapObjectSideTableEntry *newValue) {
     assert((uintptr_t(newValue) & NativeMarkerMask) == 0);
     if (newValue)
-      bits = uintptr_t(newValue) | NativeMarkerValue;
+      bits = uintptr_t(newValue) | NativeMarkerValue; //散列表 | 1
     else
       bits = 0;
   }
@@ -202,7 +202,7 @@ class WeakReference {
 
   void nativeInit(HeapObject *object) {
     auto side = object ? object->refCounts.formWeakReference() : nullptr;
-    nativeValue.store(WeakReferenceBits(side), std::memory_order_relaxed);
+    nativeValue.store(WeakReferenceBits(side), std::memory_order_relaxed);//给 side 增加计数
   }
   
   void nativeDestroy() {
@@ -228,7 +228,7 @@ class WeakReference {
            "weak assign native with non-native old object");
     destroyOldNativeBits(oldBits);
   }
-
+//增加弱计数
   HeapObject *nativeLoadStrong() {
     auto bits = nativeValue.load(std::memory_order_relaxed);
     return nativeLoadStrongFromBits(bits);
