@@ -810,7 +810,7 @@ WeakReference *swift::swift_weakAssign(WeakReference *ref, HeapObject *value) {
   ref->nativeAssign(value);
   return ref;
 }
-
+// 增加弱引用计数
 HeapObject *swift::swift_weakLoadStrong(WeakReference *ref) {
   return ref->nativeLoadStrong();
 }

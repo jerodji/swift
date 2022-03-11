@@ -1143,7 +1143,7 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
     do {
       newbits = oldbits;
       assert(newbits.getWeakRefCount() != 0);
-      newbits.incrementWeakRefCount();
+      newbits.incrementWeakRefCount(); // 
       
       if (newbits.getWeakRefCount() < oldbits.getWeakRefCount())
         swift_abortWeakRetainOverflow();

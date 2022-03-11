@@ -169,7 +169,7 @@ class WeakReference {
   
   HeapObject *nativeLoadStrongFromBits(WeakReferenceBits bits) {
     auto side = bits.getNativeOrNull();
-    return side ? side->tryRetain() : nullptr;
+    return side ? side->tryRetain() : nullptr; //散列表增加计数
   }
   
   HeapObject *nativeTakeStrongFromBits(WeakReferenceBits bits) {
@@ -202,7 +202,7 @@ class WeakReference {
 
   void nativeInit(HeapObject *object) {
     auto side = object ? object->refCounts.formWeakReference() : nullptr;
-    nativeValue.store(WeakReferenceBits(side), std::memory_order_relaxed);//给 side 增加计数
+    nativeValue.store(WeakReferenceBits(side), std::memory_order_relaxed);
   }
   
   void nativeDestroy() {
