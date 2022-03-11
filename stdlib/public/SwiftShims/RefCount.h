@@ -240,32 +240,32 @@ template <>
 struct RefCountBitOffsets<8> {
   static const size_t IsImmortalShift = 0;
   static const size_t IsImmortalBitCount = 1;
-  static const uint64_t IsImmortalMask = maskForField(IsImmortal);
+  static const uint64_t IsImmortalMask = maskForField(IsImmortal);//1
 
-  static const size_t UnownedRefCountShift = shiftAfterField(IsImmortal);
+  static const size_t UnownedRefCountShift = shiftAfterField(IsImmortal);//1
   static const size_t UnownedRefCountBitCount = 31;
   static const uint64_t UnownedRefCountMask = maskForField(UnownedRefCount);
 
-  static const size_t IsDeinitingShift = shiftAfterField(UnownedRefCount);
+  static const size_t IsDeinitingShift = shiftAfterField(UnownedRefCount);//32
   static const size_t IsDeinitingBitCount = 1;
   static const uint64_t IsDeinitingMask = maskForField(IsDeiniting);
 
-  static const size_t StrongExtraRefCountShift = shiftAfterField(IsDeiniting);
+  static const size_t StrongExtraRefCountShift = shiftAfterField(IsDeiniting);//33
   static const size_t StrongExtraRefCountBitCount = 30;
   static const uint64_t StrongExtraRefCountMask = maskForField(StrongExtraRefCount);
   
-  static const size_t UseSlowRCShift = shiftAfterField(StrongExtraRefCount);
+  static const size_t UseSlowRCShift = shiftAfterField(StrongExtraRefCount);//63
   static const size_t UseSlowRCBitCount = 1;
   static const uint64_t UseSlowRCMask = maskForField(UseSlowRC);
 
   static const size_t SideTableShift = 0;
   static const size_t SideTableBitCount = 62;
-  static const uint64_t SideTableMask = maskForField(SideTable);
+  static const uint64_t SideTableMask = maskForField(SideTable);//63,62位是 0,其它位是 1
   static const size_t SideTableUnusedLowBits = 3;
 
-  static const size_t SideTableMarkShift = SideTableBitCount;
+  static const size_t SideTableMarkShift = SideTableBitCount;//62
   static const size_t SideTableMarkBitCount = 1;
-  static const uint64_t SideTableMarkMask = maskForField(SideTableMark);
+  static const uint64_t SideTableMarkMask = maskForField(SideTableMark);//62 位是 1,其它是 0
 };
 
 // 32-bit inline
@@ -399,10 +399,10 @@ class RefCountBitsT {
   { }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
-  RefCountBitsT(HeapObjectSideTableEntry* side)
-    : bits((reinterpret_cast<BitsType>(side) >> Offsets::SideTableUnusedLowBits)
-           | (BitsType(1) << Offsets::UseSlowRCShift)
-           | (BitsType(1) << Offsets::SideTableMarkShift))
+  RefCountBitsT(HeapObjectSideTableEntry* side) //使用散列表初始化
+    : bits((reinterpret_cast<BitsType>(side) >> Offsets::SideTableUnusedLowBits) // 右移3位
+           | (BitsType(1) << Offsets::UseSlowRCShift) // 63位置为 1
+           | (BitsType(1) << Offsets::SideTableMarkShift)) // 62位置为 1
   {
     assert(refcountIsInline);
   }
@@ -432,8 +432,8 @@ class RefCountBitsT {
   }
   
   LLVM_ATTRIBUTE_ALWAYS_INLINE
-  bool hasSideTable() const {
-    bool hasSide = getUseSlowRC() && !isImmortal();
+  bool hasSideTable() const { //是否有散列表
+    bool hasSide = getUseSlowRC() && !isImmortal(); //使用 UseSlowRC 且不是isImmortal
 
     // Side table refcount must not point to another side table.
     assert((refcountIsInline || !hasSide)  &&
@@ -448,7 +448,7 @@ class RefCountBitsT {
 
     // Stored value is a shifted pointer. // 存储的值是一个移位的指针, 散列表地址
     return reinterpret_cast<HeapObjectSideTableEntry *>
-      (uintptr_t(getField(SideTable)) << Offsets::SideTableUnusedLowBits); // 左移2位
+      (uintptr_t(getField(SideTable)) << Offsets::SideTableUnusedLowBits); // 左移3位
   }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
@@ -458,7 +458,7 @@ class RefCountBitsT {
   }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
-  bool getIsDeiniting() const {
+  bool getIsDeiniting() const { //是否正在释放
     assert(!hasSideTable());
     return bool(getField(IsDeiniting));
   }
@@ -483,8 +483,8 @@ class RefCountBitsT {
     uintptr_t value = reinterpret_cast<uintptr_t>(side);
     uintptr_t storedValue = value >> Offsets::SideTableUnusedLowBits; // >> 3
     assert(storedValue << Offsets::SideTableUnusedLowBits == value);
-    setField(SideTable, storedValue);
-    setField(SideTableMark, 1);
+    setField(SideTable, storedValue); //SideTableMask , SideTableShift - 0
+    setField(SideTableMark, 1); //SideTableMarkMask, SideTableMarkShift - 62
   }
 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
@@ -658,9 +658,9 @@ class alignas(sizeof(void*) * 2) SideTableRefCountBits : public RefCountBitsT<Re
 // Similarly, storing the new side table pointer into refCounts is a
 // store-release, but most other stores into refCounts are store-relaxed.
 
-template <typename RefCountBits>
-class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBits
-  std::atomic<RefCountBits> refCounts;
+template <typename RefCountBits> //泛型 <RefCountBits>: InlineRefCountBits / SideTableRefCountBits
+class RefCounts { // RefCounts 管理引用计数的模板类
+  std::atomic<RefCountBits> refCounts; // RefCountBitsT
 
   // Out-of-line slow paths.
 
@@ -696,7 +696,7 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
   constexpr RefCounts(Immortal_t)
   : refCounts(RefCountBits(RefCountBits::Immortal)) {}
   
-  void init() {
+  void init() { //泛型 <RefCountBits>: InlineRefCountBits / SideTableRefCountBits 
     refCounts.store(RefCountBits(0, 1), std::memory_order_relaxed);
   }
 
@@ -728,7 +728,7 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
 
   // Initialize from another refcount bits.
   // Only inline -> out-of-line is allowed (used for new side table entries).
-  void init(InlineRefCountBits newBits) {
+  void init(InlineRefCountBits newBits) { // InlineRefCountBits 就是 RefCountBitsT
     refCounts.store(newBits, std::memory_order_relaxed);
   }
 
@@ -1139,11 +1139,11 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
   // Increment the weak reference count. // 增加弱引用计数
   void incrementWeak() {
     auto oldbits = refCounts.load(SWIFT_MEMORY_ORDER_CONSUME);
-    RefCountBits newbits;
+    RefCountBits newbits; // RefCountBitsT
     do {
       newbits = oldbits;
       assert(newbits.getWeakRefCount() != 0);
-      newbits.incrementWeakRefCount(); // 
+      newbits.incrementWeakRefCount(); // 散列表多引用计数++
       
       if (newbits.getWeakRefCount() < oldbits.getWeakRefCount())
         swift_abortWeakRetainOverflow();
@@ -1185,8 +1185,8 @@ class RefCounts { // RefCounts类型管理引用计数, 接受泛型 RefCountBit
   HeapObjectSideTableEntry* allocateSideTable(bool failIfDeiniting);
 };
 
-typedef RefCounts<InlineRefCountBits> InlineRefCounts;//RefCounts管理引用计数,传入泛型InlineRefCountBits
-typedef RefCounts<SideTableRefCountBits> SideTableRefCounts;//散列表管理引用计数,引用计数溢出和弱引用
+typedef RefCounts<InlineRefCountBits> InlineRefCounts;// RefCounts<RefCountBitsT>
+typedef RefCounts<SideTableRefCountBits> SideTableRefCounts;// SideTableRefCountBits: RefCountBitsT 散列表管理引用计数,引用计数溢出和弱引用
 
 static_assert(std::is_trivially_destructible<InlineRefCounts>::value,
               "InlineRefCounts must be trivially destructible");

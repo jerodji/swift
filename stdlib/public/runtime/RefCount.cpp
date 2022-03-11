@@ -103,18 +103,18 @@ HeapObjectSideTableEntry* RefCounts<InlineRefCountBits>::allocateSideTable(bool 
   
   do {
     if (oldbits.hasSideTable()) {
-      // Already have a side table. Return it and delete ours.
+      // Already have a side table. Return it and delete ours. // 已经有 sidetable,就删除其它的
       // Read before delete to streamline barriers.
       auto result = oldbits.getSideTable();
       delete side;
       return result;
     }
     else if (failIfDeiniting && oldbits.getIsDeiniting()) {
-      // Already past the start of deinit. Do nothing.
+      // Already past the start of deinit. Do nothing. //正在释放就啥也不做
       return nullptr;
     }
     
-    side->initRefCounts(oldbits);
+    side->initRefCounts(oldbits); //
     
   } while (! refCounts.compare_exchange_weak(oldbits, newbits,
                                              std::memory_order_release,
